@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Search Results - Postify</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+
+<div class="container mx-auto p-6">
+  <h2 class="text-2xl font-bold mb-4">Search results for "<span th:text="${query}"></span>"</h2>
+
+  <div th:if="${#lists.isEmpty(results)}">
+    <p class="text-gray-500">No users found.</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" th:if="${!#lists.isEmpty(results)}">
+    <div th:each="user : ${results}" class="bg-white p-4 rounded-xl shadow hover:shadow-lg transition flex items-center space-x-4">
+      <img th:src="${user.avatarUrl != null ? user.avatarUrl : '/images/default-avatar.png'}"
+           class="w-12 h-12 rounded-full border-2 border-indigo-500"/>
+      <div>
+        <a th:href="@{'/profile/' + ${user.username}}" class="font-semibold text-indigo-600 hover:underline"
+           th:text="${user.username}"></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
