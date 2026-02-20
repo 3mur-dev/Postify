@@ -53,3 +53,6 @@ Modern, minimal social feed built with Spring Boot + Thymeleaf. Users can regist
 
 ## License
 MIT (add a LICENSE file if you want to formalize it)
+
+
+Email: 3mur1111@gmail.com
