@@ -5,6 +5,7 @@ import com.omar.postify.repository.UserRepository;
 import com.omar.postify.service.PostService;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,10 +37,11 @@ public class PostController {
 
     @PostMapping("/delete/{postId}")
     public String deletePost(@PathVariable Long postId, Principal principal) {
+
         if (principal == null) return "redirect:/login";
 
         User user = userRepository.findByUsername(principal.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         postService.deletePost(postId, user);
 

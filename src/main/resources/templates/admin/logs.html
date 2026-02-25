@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Admin Logs</title>
+  <th:block th:replace="fragments/site-head :: siteHead"></th:block>
+</head>
+
+<body class="min-h-screen">
+
+<div class="flex min-h-screen flex-col md:flex-row">
+
+  <!-- Sidebar -->
+  <aside class="w-full md:w-64 bg-slate-900 text-white p-6">
+    <h2 class="text-2xl font-bold mb-8">Postify Admin</h2>
+
+    <nav class="space-y-3">
+      <a th:href="@{/admin/dashboard}" class="block px-4 py-2 rounded bg-slate-800">Dashboard</a>
+      <a th:href="@{/admin/users}" class="block px-4 py-2 rounded hover:bg-slate-800">Manage Users</a>
+      <a th:href="@{/admin/logs}" class="block px-4 py-2 rounded hover:bg-slate-800">Admin Logs</a>
+      <a th:href="@{/}" class="block px-4 py-2 rounded hover:bg-slate-800">Home</a>
+    </nav>
+  </aside>
+
+<main class="flex-1 p-6 md:p-10">
+
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+    <div>
+      <h1 class="text-3xl font-bold">Admin Logs</h1>
+      <p class="text-slate-500 mt-1">Track all administrative activity</p>
+    </div>
+
+    <!-- Search -->
+    <form method="get" th:action="@{/admin/logs}" class="mt-4 md:mt-0 flex">
+      <input type="text"
+             name="keyword"
+             th:value="${keyword}"
+             placeholder="Search logs..."
+             class="input-base rounded-l rounded-r-none"/>
+      <button class="px-4 py-2 bg-slate-900 text-white rounded-r hover:bg-slate-800">
+        Search
+      </button>
+    </form>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+    <div class="card p-6">
+      <h3 class="text-slate-500 text-sm">Total Logs</h3>
+      <p class="text-2xl font-bold mt-2" th:text="${totalLogs}">0</p>
+    </div>
+
+    <div class="card p-6">
+      <h3 class="text-slate-500 text-sm">Current Page</h3>
+      <p class="text-2xl font-bold mt-2"
+         th:text="${currentPage + 1}">1</p>
+    </div>
+
+    <div class="card p-6">
+      <h3 class="text-slate-500 text-sm">Total Pages</h3>
+      <p class="text-2xl font-bold mt-2"
+         th:text="${totalPages}">1</p>
+    </div>
+
+  </div>
+
+  <!-- Logs Table Card -->
+  <div class="card p-6">
+
+    <div class="p-6 border-b border-slate-100">
+      <h2 class="text-xl font-semibold">Activity History</h2>
+    </div>
+
+    <div class="overflow-x-auto">
+
+      <table class="min-w-full text-left">
+        <thead class="bg-slate-100 text-slate-600 uppercase text-sm">
+        <tr>
+          <th class="px-6 py-3">Admin</th>
+          <th class="px-6 py-3">Action</th>
+          <th class="px-6 py-3">Target</th>
+          <th class="px-6 py-3">Date</th>
+        </tr>
+        </thead>
+
+        <tbody class="divide-y divide-slate-200">
+
+        <!-- Empty -->
+        <tr th:if="${#lists.isEmpty(logs)}">
+          <td colspan="4" class="text-center text-slate-500 py-8">
+            No admin activity recorded yet
+          </td>
+        </tr>
+
+        <!-- Logs -->
+        <tr th:each="log : ${logs}" class="hover:bg-slate-50">
+
+          <td class="px-6 py-4 font-medium"
+              th:text="${log.adminUsername}"></td>
+
+          <td class="px-6 py-4">
+                        <span class="px-3 py-1 text-xs font-semibold rounded-full"
+                              th:classappend="
+                                ${log.action == 'DELETE_USER'} ? 'bg-red-100 text-red-700' :
+                                (${log.action == 'CREATE_USER'} ? 'bg-green-100 text-green-700' :
+                                (${log.action == 'BAN_USER'} ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-gray-100 text-gray-700'))"
+                              th:text="${log.action}">
+                        </span>
+          </td>
+
+          <td class="px-6 py-4 text-slate-700"
+              th:text="${log.target}"></td>
+
+          <td class="px-6 py-4 text-sm text-slate-500"
+              th:text="${#temporals.format(log.createdAt, 'dd MMM yyyy HH:mm')}">
+          </td>
+
+        </tr>
+
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="flex justify-between items-center mt-6">
+
+    <a th:if="${currentPage > 0}"
+       th:href="@{/admin/logs(page=${currentPage - 1}, keyword=${keyword})}"
+       class="px-4 py-2 bg-slate-200 rounded hover:bg-slate-300">
+      Previous
+    </a>
+
+    <div class="text-slate-600 text-sm">
+      Page <span th:text="${currentPage + 1}"></span>
+      of <span th:text="${totalPages}"></span>
+    </div>
+
+    <a th:if="${currentPage + 1 < totalPages}"
+       th:href="@{/admin/logs(page=${currentPage + 1}, keyword=${keyword})}"
+       class="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800">
+      Next
+    </a>
+  </div>
+</main>
+</div>
+
+</body>
+</html>

@@ -17,34 +17,35 @@ public class LikeService {
     private final LikeRepository likeRepository;
     private final PostRepository postRepository;
 
-    public void toggleLike(Long postId, User user) {
+    // Toggle like and return new status
+    public boolean toggleLike(Long postId, User user) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        Optional<Like> existingLike = likeRepository.findByUserAndPost(user, post);
-
-        if (existingLike.isPresent()) {
-            likeRepository.delete(existingLike.get()); // Unlike
+        Optional<Like> existing = likeRepository.findByUserAndPost(user, post);
+        if (existing.isPresent()) {
+            likeRepository.delete(existing.get());
+            return false;
         } else {
             Like like = Like.builder()
                     .user(user)
                     .post(post)
                     .build();
-            likeRepository.save(like); // Like
+            likeRepository.save(like);
+            return true;
         }
     }
 
-    public long countLikes(Post post) {
+    public long countLikes(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
         return likeRepository.countByPost(post);
     }
 
-    public boolean isLikedByUser(Post post, User user) {
-
-        if (user == null) {
-            return false;
-        }
-
+    public boolean isLikedByUser(Long postId, User user) {
+        if (user == null) return false;
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
         return likeRepository.findByUserAndPost(user, post).isPresent();
     }
-
 }

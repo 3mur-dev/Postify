@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Manage Users</title>
+  <th:block th:replace="fragments/site-head :: siteHead"></th:block>
+</head>
+
+<body class="min-h-screen">
+
+<div class="flex min-h-screen flex-col md:flex-row">
+
+  <!-- Sidebar -->
+  <aside class="w-full md:w-64 bg-slate-900 text-white p-6">
+    <h2 class="text-2xl font-bold mb-8">Postify Admin</h2>
+
+    <nav class="space-y-3">
+      <a th:href="@{/admin/dashboard}" class="block px-4 py-2 rounded hover:bg-slate-800">Dashboard</a>
+      <a th:href="@{/admin/users}" class="block px-4 py-2 rounded bg-slate-800">Manage Users</a>
+      <a th:href="@{/admin/logs}" class="block px-4 py-2 rounded hover:bg-slate-800">Admin Logs</a>
+      <a th:href="@{/}" class="block px-4 py-2 rounded hover:bg-slate-800">Home</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 p-6 md:p-10">
+
+    <h1 class="text-3xl font-bold mb-6 text-slate-900">Manage Users</h1>
+
+    <div class="card overflow-x-auto">
+
+      <table class="min-w-full text-left">
+        <thead class="bg-slate-100 text-slate-700 uppercase text-sm">
+        <tr>
+          <th class="px-6 py-3">ID</th>
+          <th class="px-6 py-3">Username</th>
+          <th class="px-6 py-3">Email</th>
+          <th class="px-6 py-3">Role</th>
+          <th class="px-6 py-3">Actions</th>
+        </tr>
+        </thead>
+
+        <tbody class="divide-y divide-slate-200">
+        <tr th:each="user : ${users}" class="hover:bg-slate-50">
+
+          <td class="px-6 py-4" th:text="${user.id}">1</td>
+          <td class="px-6 py-4 font-semibold" th:text="${user.username}">Omar</td>
+          <td class="px-6 py-4" th:text="${user.email}">email@mail.com</td>
+          <td class="px-6 py-4">
+                        <span th:text="${user.role}"
+                              class="px-2 py-1 text-xs rounded bg-slate-100 text-slate-700">
+                            USER
+                        </span>
+          </td>
+
+          <td class="px-6 py-4 space-x-2">
+
+            <form th:action="@{/admin/users/delete/{id}(id=${user.id})}"
+                  method="post"
+                  class="inline">
+              <button class="bg-rose-600 text-white px-3 py-1 rounded hover:bg-rose-700">
+                Delete
+              </button>
+            </form>
+
+            <form th:action="@{/admin/users/promote/{id}(id=${user.id})}"
+                  method="post"
+                  class="inline">
+              <button class="bg-teal-600 text-white px-3 py-1 rounded hover:bg-teal-700">
+                Promote
+              </button>
+            </form>
+
+          </td>
+
+        </tr>
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </main>
+
+</div>
+
+</body>
+</html>

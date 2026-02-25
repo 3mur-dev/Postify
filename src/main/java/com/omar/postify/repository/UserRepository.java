@@ -1,5 +1,6 @@
 package com.omar.postify.repository;
 
+import com.omar.postify.entities.Role;
 import com.omar.postify.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -19,5 +20,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsernameOrEmail(@Param("input") String input);
 
     List<User> findByUsernameContainingIgnoreCase(String query);
-}
 
+    long countByRole(Role role);
+}

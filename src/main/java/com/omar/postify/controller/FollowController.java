@@ -4,6 +4,7 @@ import com.omar.postify.entities.Follow;
 import com.omar.postify.entities.User;
 import com.omar.postify.repository.FollowRepository;
 import com.omar.postify.repository.UserRepository;
+import com.omar.postify.service.NotificationService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
@@ -13,11 +14,14 @@ import java.security.Principal;
 public class FollowController {
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public FollowController(FollowRepository followRepository,
-                            UserRepository userRepository) {
+                            UserRepository userRepository,
+                            NotificationService notificationService) {
         this.followRepository = followRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     @PostMapping("/{username}")
@@ -49,6 +53,13 @@ public class FollowController {
             // Follow
             Follow follow = new Follow(currentUser, targetUser);
             followRepository.save(follow);
+
+            notificationService.notifyUser(
+                    targetUser,
+                    "follow",
+                    currentUser.getUsername() + " started following you",
+                    "/profile/" + currentUser.getUsername()
+            );
         }
         return "redirect:/profile/" + username;
     }

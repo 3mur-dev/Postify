@@ -46,6 +46,7 @@ public class SecurityConfig {
                                 "/profile/**",
                                 "/search/**"
                         ).permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

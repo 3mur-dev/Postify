@@ -1,25 +1,26 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
   <title>Search Results - Postify</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <th:block th:replace="fragments/site-head :: siteHead"></th:block>
 </head>
-<body class="bg-gray-50">
+<body class="min-h-screen">
+
+<header th:replace="fragments/navbar :: navbar"></header>
 
 <div class="container mx-auto p-6">
-  <h2 class="text-2xl font-bold mb-4">Search results for "<span th:text="${query}"></span>"</h2>
+  <h2 class="text-2xl font-bold mb-4 text-slate-900">Search results for "<span th:text="${query}"></span>"</h2>
 
   <div th:if="${#lists.isEmpty(results)}">
-    <p class="text-gray-500">No users found.</p>
+    <p class="text-slate-500">No users found.</p>
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" th:if="${!#lists.isEmpty(results)}">
-    <div th:each="user : ${results}" class="bg-white p-4 rounded-xl shadow hover:shadow-lg transition flex items-center space-x-4">
+    <div th:each="user : ${results}" class="card card-hover p-4 flex items-center space-x-4">
       <img th:src="${user.avatarUrl != null ? user.avatarUrl : '/images/default-avatar.png'}"
-           class="w-12 h-12 rounded-full border-2 border-indigo-500"/>
+           class="w-12 h-12 rounded-full border-2 border-teal-500"/>
       <div>
-        <a th:href="@{'/profile/' + ${user.username}}" class="font-semibold text-indigo-600 hover:underline"
+        <a th:href="@{'/profile/' + ${user.username}}" class="font-semibold text-teal-700 hover:underline"
            th:text="${user.username}"></a>
       </div>
     </div>

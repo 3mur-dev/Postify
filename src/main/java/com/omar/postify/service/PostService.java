@@ -2,6 +2,10 @@ package com.omar.postify.service;
 
 import com.omar.postify.entities.Post;
 import com.omar.postify.entities.User;
+import com.omar.postify.exception.InvalidPostException;
+import com.omar.postify.exception.PostNotFoundException;
+import com.omar.postify.exception.UnauthorizedActionException;
+import com.omar.postify.repository.CommentRepository;
 import com.omar.postify.repository.PostRepository;
 import com.omar.postify.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,14 +25,16 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final CommentRepository commentRepository;
 
     private static final Path POST_UPLOAD_DIR =
             Paths.get(System.getProperty("user.dir"), "uploads", "posts");
@@ -37,8 +44,12 @@ public class PostService {
         boolean hasContent = content != null && !content.trim().isEmpty();
         boolean hasImage = image != null && !image.isEmpty();
 
+        if (!hasContent && hasImage) {
+            throw new InvalidPostException("Image posts must include a caption.");
+        }
+
         if (!hasContent && !hasImage) {
-            throw new RuntimeException("Post cannot be empty");
+            throw new InvalidPostException("Post must contain text or an image.");
         }
 
         User user = userRepository.findByUsername(username)
@@ -69,29 +80,46 @@ public class PostService {
         return postRepository.findAll(pageable);
     }
 
-    public void deletePost(Long postId, User user) {
+    @Transactional
+    public void deletePost(Long postId, User currentUser) {
+
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new PostNotFoundException("Post not found"));
 
-        // Only the author can delete
-        if (!post.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("You cannot delete someone else's post");
+        // Security check
+        if (!post.getUser().getId().equals(currentUser.getId())) {
+            throw new UnauthorizedActionException(
+                    "You cannot delete someone else's post"
+            );
         }
 
-        // Delete attached image if any
-        if (post.getImageUrl() != null && post.getImageUrl().startsWith("/images/posts/")) {
-            String filename = post.getImageUrl().substring("/images/posts/".length());
-            Path target = POST_UPLOAD_DIR.resolve(filename).normalize();
-            if (target.startsWith(POST_UPLOAD_DIR)) {
-                try {
-                    Files.deleteIfExists(target);
-                } catch (IOException ignored) {
-                    // best effort; don't block delete
-                }
-            }
-        }
+        deletePostImageIfExists(post);
 
+        commentRepository.deleteByPostId(postId);
         postRepository.delete(post);
+    }
+
+    private void deletePostImageIfExists(Post post) {
+
+        String imageUrl = post.getImageUrl();
+
+        if (imageUrl == null || !imageUrl.startsWith("/images/posts/")) {
+            return;
+        }
+
+        String filename = imageUrl.substring("/images/posts/".length());
+        Path target = POST_UPLOAD_DIR.resolve(filename).normalize();
+
+        if (!target.startsWith(POST_UPLOAD_DIR)) {
+            return; // Prevent path traversal
+        }
+
+        try {
+            Files.deleteIfExists(target);
+        } catch (IOException e) {
+            // Log instead of ignore
+            log.warn("Failed to delete image file: {}", target, e);
+        }
     }
 
     private String storeImage(MultipartFile image) {
@@ -118,5 +146,9 @@ public class PostService {
         } catch (IOException e) {
             throw new RuntimeException("Failed to store image", e);
         }
+    }
+
+    public long getPostCount() {
+        return postRepository.count();
     }
 }

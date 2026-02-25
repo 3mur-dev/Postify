@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Admin Dashboard</title>
+    <th:block th:replace="fragments/site-head :: siteHead"></th:block>
+</head>
+
+<body class="min-h-screen">
+
+<div class="flex min-h-screen flex-col md:flex-row">
+
+    <!-- Sidebar -->
+    <aside class="w-full md:w-64 bg-slate-900 text-white p-6">
+        <h2 class="text-2xl font-bold mb-8">Postify Admin</h2>
+
+        <nav class="space-y-3">
+            <a th:href="@{/admin/dashboard}" class="block px-4 py-2 rounded bg-slate-800">Dashboard</a>
+            <a th:href="@{/admin/users}" class="block px-4 py-2 rounded hover:bg-slate-800">Manage Users</a>
+            <a th:href="@{/admin/logs}" class="block px-4 py-2 rounded hover:bg-slate-800">Admin Logs</a>
+            <a th:href="@{/}" class="block px-4 py-2 rounded hover:bg-slate-800">Home</a>
+        </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="flex-1 p-6 md:p-10">
+
+        <h1 class="text-3xl font-bold mb-8 text-slate-900">Dashboard Overview</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+
+            <div class="card p-6">
+                <h3 class="text-slate-500 text-sm">Total Users</h3>
+                <p class="text-2xl font-bold mt-2" th:text="${userCount}">0</p>
+            </div>
+
+            <div class="card p-6">
+                <h3 class="text-slate-500 text-sm">Total Posts</h3>
+                <p class="text-2xl font-bold mt-2" th:text="${postCount}">0</p>
+            </div>
+
+            <div class="card p-6">
+                <h3 class="text-slate-500 text-sm">Admins</h3>
+                <p class="text-2xl font-bold mt-2" th:text="${adminCount}">0</p>
+            </div>
+
+        </div>
+
+        <div class="card p-6">
+            <h2 class="text-xl font-semibold mb-4">Quick Info</h2>
+            <p class="text-slate-600">System status and overview metrics.</p>
+        </div>
+
+    </main>
+
+</div>
+
+</body>
+</html>

@@ -1,20 +1,18 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edit Profile - Postify</title>
   <script src="//unpkg.com/alpinejs" defer></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <th:block th:replace="fragments/site-head :: siteHead"></th:block>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="min-h-screen">
 
 <!-- Navbar -->
 <header th:replace="fragments/navbar :: navbar"></header>
 
 <!-- Edit Profile Form -->
 <div class="container mx-auto p-6 flex justify-center">
-  <div class="w-full max-w-xl bg-white rounded-2xl shadow-md p-8">
+  <div class="w-full max-w-xl card p-8">
 
     <h2 class="text-2xl font-bold mb-6 text-center">Edit Profile</h2>
 
@@ -23,28 +21,28 @@
       <!-- Avatar upload -->
       <div class="flex flex-col items-center">
         <img th:src="${user.avatarUrl != null ? user.avatarUrl : '/images/default-avatar.png'}"
-             class="w-32 h-32 rounded-full border-4 border-indigo-500 mb-4" alt="Avatar"/>
-        <label class="block text-gray-700 font-semibold mb-1">Change Avatar</label>
+             class="w-32 h-32 rounded-full border-4 border-teal-500 mb-4" alt="Avatar"/>
+        <label class="block text-slate-700 font-semibold mb-1">Change Avatar</label>
         <input type="file" name="avatar" accept="image/*"
-               class="border rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"/>
+               class="input-base w-full"/>
       </div>
 
       <!-- Username (readonly) -->
       <div>
-        <label class="block text-gray-700 font-semibold mb-1">Username</label>
+        <label class="block text-slate-700 font-semibold mb-1">Username</label>
         <input type="text" th:field="*{username}" readonly
-               class="w-full px-4 py-3 border rounded-xl bg-gray-100 cursor-not-allowed"/>
+               class="w-full input-base bg-slate-100 cursor-not-allowed"/>
       </div>
 
       <!-- Bio -->
       <div>
-        <label class="block text-gray-700 font-semibold mb-1">Bio</label>
+        <label class="block text-slate-700 font-semibold mb-1">Bio</label>
         <textarea th:field="*{bio}" rows="4" placeholder="Write something about yourself..."
-                  class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+                  class="w-full input-base"></textarea>
       </div>
 
       <button type="submit"
-              class="w-full bg-indigo-500 text-white py-3 rounded-xl hover:bg-indigo-600 transition font-semibold">
+              class="w-full py-3 rounded-xl btn-primary font-semibold">
         Save Changes
       </button>
     </form>
