@@ -34,6 +34,7 @@
     <!-- Follow Button -->
     <div th:if="${!isOwnProfile}">
     <form th:action="@{/follow/{username}(username=${profile.username})}" method="post">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
         <button type="submit"
                 class="px-4 py-2 rounded-xl font-semibold"
                 th:classappend="${isFollowing} ? ' btn-ghost' : ' btn-primary'"

@@ -26,7 +26,7 @@ public class CommentService {
         }
         String body = content.trim();
 
-        Post post = postRepository.findById(postId)
+        Post post = postRepository.findWithUserById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
         Comment comment = Comment.builder()
@@ -39,14 +39,10 @@ public class CommentService {
     }
 
     public List<Comment> getCommentsForPost(Long postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
-        return commentRepository.findByPostOrderByCreatedAtAsc(post);
+        return commentRepository.findByPostIdOrderByCreatedAtAsc(postId);
     }
 
     public long countComments(Long postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
-        return commentRepository.countByPost(post);
+        return commentRepository.countByPostId(postId);
     }
 }

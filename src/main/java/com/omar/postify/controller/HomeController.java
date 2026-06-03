@@ -1,9 +1,7 @@
 package com.omar.postify.controller;
 
-import com.omar.postify.entities.Post;
+import com.omar.postify.dto.PostFeedDto;
 import com.omar.postify.entities.User;
-import com.omar.postify.service.CommentService;
-import com.omar.postify.service.LikeService;
 import com.omar.postify.service.PostService;
 import com.omar.postify.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +21,6 @@ public class HomeController {
 
     private final PostService postService;
     private final UserService userService;
-    private final LikeService likeService;
-    private final CommentService commentService;
 
     @GetMapping("/")
     public String home(
@@ -42,7 +38,12 @@ public class HomeController {
             currentUser = userService.getUserByUsername(principal.getName());
         }
 
-        Page<Post> posts = postService.getPosts(keyword, currentPage, pageSize);
+        Page<PostFeedDto> posts = postService.getPosts(
+                keyword,
+                currentPage,
+                pageSize,
+                currentUser != null ? currentUser.getId() : null
+        );
 
         int totalPages = posts.getTotalPages();
         List<Integer> pageNumbers = totalPages > 0
@@ -56,8 +57,6 @@ public class HomeController {
         model.addAttribute("pageNumbers", pageNumbers);
         model.addAttribute("currentPage", currentPage);
         model.addAttribute("pageSize", pageSize);
-        model.addAttribute("likeService", likeService);
-        model.addAttribute("commentService", commentService);
 
         return "home";
     }

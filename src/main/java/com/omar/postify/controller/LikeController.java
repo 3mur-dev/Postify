@@ -34,21 +34,19 @@ public class LikeController {
 
         User user = userRepository.findByUsername(principal.getName())
                 .orElseThrow();
+        Post post = postRepository.findWithUserById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
 
         boolean liked = likeService.toggleLike(postId, user);
         long count = likeService.countLikes(postId);
 
-        if (liked) {
-            Post post = postRepository.findById(postId)
-                    .orElse(null);
-            if (post != null && !post.getUser().getId().equals(user.getId())) {
-                notificationService.notifyUser(
-                        post.getUser(),
-                        "like",
-                        user.getUsername() + " liked your post",
-                        "/profile/" + user.getUsername()
-                );
-            }
+        if (liked && !post.getUser().getId().equals(user.getId())) {
+            notificationService.notifyUser(
+                    post.getUser(),
+                    "like",
+                    user.getUsername() + " liked your post",
+                    "/profile/" + user.getUsername()
+            );
         }
 
         return ResponseEntity.ok(Map.<String, Object>of(

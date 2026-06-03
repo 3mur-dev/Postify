@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
+@Table(name = "users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -40,15 +41,4 @@ public class User {
 
     private String bio;
     private String avatarUrl;
-
-    @ManyToMany
-    @JoinTable(
-            name = "user_followers",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "follower_id")
-    )
-    private Set<User> followers = new HashSet<>();
-
-    @ManyToMany(mappedBy = "followers")
-    private Set<User> following = new HashSet<>();
 }

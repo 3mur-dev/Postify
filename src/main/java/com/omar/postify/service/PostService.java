@@ -1,11 +1,14 @@
 package com.omar.postify.service;
 
+import com.omar.postify.dto.PostFeedDto;
 import com.omar.postify.entities.Post;
 import com.omar.postify.entities.User;
 import com.omar.postify.exception.InvalidPostException;
 import com.omar.postify.exception.PostNotFoundException;
 import com.omar.postify.exception.UnauthorizedActionException;
+import com.omar.postify.repository.PostCountProjection;
 import com.omar.postify.repository.CommentRepository;
+import com.omar.postify.repository.LikeRepository;
 import com.omar.postify.repository.PostRepository;
 import com.omar.postify.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +26,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -35,6 +43,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
+    private final LikeRepository likeRepository;
 
     private static final Path POST_UPLOAD_DIR =
             Paths.get(System.getProperty("user.dir"), "uploads", "posts");
@@ -70,20 +79,63 @@ public class PostService {
         postRepository.save(post);
     }
 
-    public Page<Post> getPosts(String keyword, int page, int size) {
+    @Transactional(readOnly = true)
+    public Page<PostFeedDto> getPosts(String keyword, int page, int size, Long currentUserId) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
+        Page<PostFeedDto> basePage;
         if (keyword != null && !keyword.isBlank()) {
-            return postRepository.searchPosts(keyword, pageable);
+            basePage = postRepository.searchPosts(keyword, pageable);
+        } else {
+            basePage = postRepository.findAllPosts(pageable);
         }
 
-        return postRepository.findAll(pageable);
+        return enrichFeed(basePage, currentUserId);
+    }
+
+    private Page<PostFeedDto> enrichFeed(Page<PostFeedDto> basePage, Long currentUserId) {
+        List<PostFeedDto> basePosts = basePage.getContent();
+        if (basePosts.isEmpty()) {
+            return basePage;
+        }
+
+        List<Long> postIds = basePosts.stream()
+                .map(PostFeedDto::id)
+                .toList();
+
+        Map<Long, Long> likeCounts = toCountMap(likeRepository.countLikesForPostIds(postIds));
+        Map<Long, Long> commentCounts = toCountMap(commentRepository.countCommentsForPostIds(postIds));
+        Set<Long> likedPostIds = currentUserId == null
+                ? Set.of()
+                : new HashSet<>(likeRepository.findLikedPostIdsByUserIdAndPostIds(currentUserId, postIds));
+
+        List<PostFeedDto> enrichedPosts = basePosts.stream()
+                .map(post -> post.withStats(
+                        likeCounts.getOrDefault(post.id(), 0L),
+                        commentCounts.getOrDefault(post.id(), 0L),
+                        likedPostIds.contains(post.id())
+                ))
+                .toList();
+
+        return new org.springframework.data.domain.PageImpl<>(
+                enrichedPosts,
+                basePage.getPageable(),
+                basePage.getTotalElements()
+        );
+    }
+
+    private Map<Long, Long> toCountMap(List<PostCountProjection> projections) {
+        return projections.stream()
+                .collect(Collectors.toMap(
+                        PostCountProjection::getPostId,
+                        projection -> projection.getTotal() == null ? 0L : projection.getTotal()
+                ));
     }
 
     @Transactional
     public void deletePost(Long postId, User currentUser) {
 
-        Post post = postRepository.findById(postId)
+        Post post = postRepository.findWithUserById(postId)
                 .orElseThrow(() -> new PostNotFoundException("Post not found"));
 
         // Security check
@@ -95,6 +147,7 @@ public class PostService {
 
         deletePostImageIfExists(post);
 
+        likeRepository.deleteByPostId(postId);
         commentRepository.deleteByPostId(postId);
         postRepository.delete(post);
     }

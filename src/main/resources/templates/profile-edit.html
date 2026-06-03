@@ -17,6 +17,7 @@
     <h2 class="text-2xl font-bold mb-6 text-center">Edit Profile</h2>
 
     <form th:action="@{/profile/edit}" th:object="${user}" method="post" enctype="multipart/form-data" class="space-y-6">
+      <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
       <!-- Avatar upload -->
       <div class="flex flex-col items-center">

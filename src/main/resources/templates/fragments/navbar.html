@@ -73,11 +73,13 @@
                 Edit Profile
               </a>
 
-              <!-- Logout link -->
-              <a th:href="@{/logout}"
-                 class="block px-4 py-2 hover:bg-gray-100">
-                Logout
-              </a>
+              <!-- Logout action -->
+              <form th:action="@{/logout}" method="post" class="block px-4 py-2 hover:bg-gray-100">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button type="submit" class="w-full text-left">
+                  Logout
+                </button>
+              </form>
 
             </div>
           </div>

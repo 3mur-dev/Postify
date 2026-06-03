@@ -19,17 +19,18 @@
     <!-- Post Header -->
     <div class="flex justify-between items-center">
       <div class="flex items-center space-x-3">
-        <img th:src="${post.user.avatarUrl != null ? post.user.avatarUrl : '/images/default-avatar.png'}"
+        <img th:src="${post.avatarUrl != null ? post.avatarUrl : '/images/default-avatar.png'}"
              class="w-10 h-10 rounded-full border-2 border-teal-500"/>
 
-        <a th:href="@{'/profile/' + ${post.user.username}}"
+        <a th:href="@{'/profile/' + ${post.username}}"
            class="font-semibold text-slate-800 hover:text-teal-700"
-           th:text="${post.user.username}"></a>
+           th:text="${post.username}"></a>
       </div>
 
       <!-- Delete Button -->
-      <div th:if="${currentUser != null and currentUser.username == post.user.username}">
+      <div th:if="${currentUser != null and currentUser.id == post.authorId}">
         <form th:action="@{/posts/delete/{id}(id=${post.id})}" method="post">
+          <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
           <button type="submit"
                   class="px-3 py-1 bg-rose-100 text-rose-700 font-semibold rounded-lg hover:bg-rose-200 hover:text-rose-800 transition">
             Delete
@@ -58,17 +59,17 @@
     <div class="flex items-center mt-4 space-x-3" th:if="${currentUser != null}">
       <button type="button"
               class="like-btn flex items-center space-x-2 px-4 py-1 rounded-xl transition shadow-sm"
-              th:classappend="${likeService.isLikedByUser(post.id, currentUser) ? ' bg-amber-100 text-amber-700' : ' bg-slate-100 text-slate-600 hover:bg-slate-200'}"
+              th:classappend="${post.likedByCurrentUser ? ' bg-amber-100 text-amber-700' : ' bg-slate-100 text-slate-600 hover:bg-slate-200'}"
               th:data-post-id="${post.id}">
-        <span class="like-icon" th:text="${likeService.isLikedByUser(post.id, currentUser) ? '❤️' : '🤍'}"></span>
-        <span class="like-count" th:text="${likeService.countLikes(post.id)}"></span>
+        <span class="like-icon" th:text="${post.likedByCurrentUser ? '❤️' : '🤍'}"></span>
+        <span class="like-count" th:text="${post.likeCount}"></span>
       </button>
 
       <button type="button"
               class="comment-toggle flex items-center space-x-2 px-4 py-1 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition shadow-sm"
               th:data-post-id="${post.id}">
         <span>💬</span>
-        <span class="comment-count" th:text="${commentService.countComments(post.id)}"></span>
+        <span class="comment-count" th:text="${post.commentCount}"></span>
       </button>
     </div>
 
@@ -79,6 +80,7 @@
       <div class="comment-list space-y-3 text-sm text-slate-800"></div>
 
       <form class="comment-form mt-3 flex space-x-2">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
         <input type="text"
                name="content"
                placeholder="Add a comment..."
@@ -133,6 +135,7 @@
     <h2 class="text-xl font-semibold mb-4">Create Post</h2>
 
     <form th:action="@{/posts/create}" method="post" enctype="multipart/form-data">
+      <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
       <textarea name="content"
                 rows="4"
                 placeholder="What's on your mind?"
@@ -159,6 +162,15 @@
 <script th:inline="javascript">
   document.addEventListener('DOMContentLoaded', () => {
 
+      function csrfHeaders(extraHeaders = {}) {
+          const csrf = window.postifyCsrf || {};
+          if (!csrf.token) return extraHeaders;
+          return {
+              ...extraHeaders,
+              [csrf.header]: csrf.token
+          };
+      }
+
       // Likes
       document.addEventListener('click', function(e) {
           const button = e.target.closest('.like-btn');
@@ -166,7 +178,10 @@
 
           const postId = button.dataset.postId;
 
-          fetch(`/posts/${postId}/like`, { method: 'POST' })
+          fetch(`/posts/${postId}/like`, {
+              method: 'POST',
+              headers: csrfHeaders()
+          })
           .then(res => res.json())
           .then(data => {
               const icon = button.querySelector('.like-icon');
@@ -240,7 +255,7 @@
           try {
               const res = await fetch(`/posts/${postId}/comments`, {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                  headers: csrfHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' }),
                   body: new URLSearchParams({ content })
               });
               const data = await res.json();

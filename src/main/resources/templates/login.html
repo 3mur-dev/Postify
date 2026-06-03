@@ -14,6 +14,7 @@
   </div>
 
   <form th:action="@{/login}" th:object="${loginRequest}" method="post" class="space-y-5">
+    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
     <div>
       <label class="block text-slate-700 font-semibold mb-1">Username or Email</label>
       <input type="text" th:field="*{username}" placeholder="Enter username or email"

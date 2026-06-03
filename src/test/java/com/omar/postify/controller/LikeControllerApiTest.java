@@ -78,7 +78,7 @@ class LikeControllerApiTest {
         when(userRepository.findByUsername("john")).thenReturn(Optional.of(actor));
         when(likeService.toggleLike(10L, actor)).thenReturn(true);
         when(likeService.countLikes(10L)).thenReturn(4L);
-        when(postRepository.findById(10L)).thenReturn(Optional.of(post));
+        when(postRepository.findWithUserById(10L)).thenReturn(Optional.of(post));
 
         mockMvc.perform(post("/posts/10/like").principal(() -> "john"))
                 .andExpect(status().isOk())
@@ -103,7 +103,22 @@ class LikeControllerApiTest {
                 .role(Role.USER)
                 .build();
 
+        User owner = User.builder()
+                .id(2L)
+                .username("owner")
+                .email("owner@example.com")
+                .password("password123")
+                .role(Role.USER)
+                .build();
+
+        Post post = Post.builder()
+                .id(10L)
+                .user(owner)
+                .content("hello")
+                .build();
+
         when(userRepository.findByUsername("john")).thenReturn(Optional.of(actor));
+        when(postRepository.findWithUserById(10L)).thenReturn(Optional.of(post));
         when(likeService.toggleLike(10L, actor)).thenReturn(false);
         when(likeService.countLikes(10L)).thenReturn(0L);
 
@@ -112,7 +127,7 @@ class LikeControllerApiTest {
                 .andExpect(jsonPath("$.liked").value(false))
                 .andExpect(jsonPath("$.count").value(0));
 
-        verify(postRepository, never()).findById(any());
+        verify(postRepository).findWithUserById(10L);
         verify(notificationService, never()).notifyUser(any(), any(), any(), any());
     }
 }

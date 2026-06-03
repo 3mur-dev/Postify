@@ -47,10 +47,8 @@ public class FollowController {
                 .existsByFollowerAndFollowing(currentUser, targetUser);
 
         if (alreadyFollowing) {
-            // Unfollow
             followRepository.deleteByFollowerAndFollowing(currentUser, targetUser);
         } else {
-            // Follow
             Follow follow = new Follow(currentUser, targetUser);
             followRepository.save(follow);
 
