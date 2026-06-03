@@ -1,165 +1,135 @@
-# Postify
 
-Modern, minimal social media feed built with Spring Boot + Thymeleaf. Users can register, log in, post text or images, like, follow, search people, edit profiles, and browse a responsive feed with infinite scroll capabilities.
+content=Great+post
+```
 
-## Features
-- **Authentication**: Email/username login with password hashing (BCrypt)
-- **Posts**: Create posts with optional image attachments; delete your own posts
-- **Engagement**: Like/unlike posts and see live counts
-- **Connections**: Follow/unfollow users; profile pages with follower/following stats
-- **Profile Management**: Edit profiles with avatar upload
-- **Discovery**: Search users by username
-- **UI/UX**: Responsive design with mobile-friendly navbar and load-more feed
+Response: JSON payload containing the comment id, author, avatar, content, and timestamp.
 
-## Tech Stack
-- **Backend**: Java 21, Spring Boot 4 (Web, Security, Data JPA, Validation)
-- **Frontend**: Thymeleaf + Tailwind CDN
-- **Database**: MySQL + JPA/Hibernate
-- **Security**: BCrypt password hashing, JWT utility ready for API use
+### Toggle a Like
 
-## Quick Start (Local)
+```http
+POST /posts/42/like
+```
+
+Response:
+
+```json
+{
+  "liked": true,
+  "count": 17
+}
+```
+
+### Subscribe to Notifications
+
+```http
+GET /notifications/stream
+```
+
+This endpoint returns an SSE stream for the authenticated user.
+
+## Environment Variables
+
+Configured through `.env`, imported with `spring.config.import=optional:file:.env`.
+
+```properties
+DB_URL=jdbc:mysql://localhost:3306/postify?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+DB_USERNAME=root
+DB_PASSWORD=root
+PORT=8080
+JWT_SECRET=your_jwt_secret_here
+JWT_EXPIRATION_MS=86400000
+```
+
+Notes:
+
+- `JWT_SECRET` and `JWT_EXPIRATION_MS` are available in configuration for the token utility layer.
+- Current runtime authentication is still handled by Spring Security form login.
+
+## Database
+
+- Schema is managed with Flyway migrations in `src/main/resources/db/migration`.
+- `spring.jpa.hibernate.ddl-auto=validate` keeps the application honest against the migration history.
+- Hibernate SQL logging is enabled for local development.
+- Tests use H2 with a dedicated test profile.
+
+## Running Locally
 
 ### Prerequisites
+
 - JDK 21
-- Maven 3.8+
-- MySQL 8.0+
+- Maven or Maven Wrapper
+- MySQL 8+ running locally
 
-### Setup Steps
-1. Clone the repository
-   ```bash
-   git clone https://github.com/3mur-dev/Postify.git
-   cd Postify
-   ```
+### Start the App
 
-2. Create database
-   ```sql
-   CREATE DATABASE postify;
-   ```
+Windows:
 
-3. Configure environment
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Edit `.env`:
-   ```properties
-   DB_URL=jdbc:mysql://localhost:3306/postify?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-   DB_USERNAME=root
-   DB_PASSWORD=yourpassword
-   PORT=8080
-   JWT_SECRET=your-secret-key-at-least-32-chars
-   JWT_EXPIRATION_MS=86400000
-   ```
+```powershell
+.\mvnw.cmd spring-boot:run
+```
 
-4. Run the application
-   ```bash
-   mvn spring-boot:run
-   ```
-   
-   Visit: `http://localhost:8080`
+- Upload directory: `uploads/` (git-ignored runtime data)
+- Avatar and post images are persisted on disk and exposed through configured web paths
+  macOS / Linux:
 
-5. Create test account
-   - Register with email/username
-   - Start posting and following users
+```bash
+./mvnw spring-boot:run
+```
+
+Then open:
+
+```text
+http://localhost:8080
+```
+
+## Testing
+
+Run the full test suite:
+
+Windows:
+
+```powershell
+.\mvnw.cmd test
+```
+
+macOS / Linux:
+
+```bash
+./mvnw test
+```
+
+The test suite includes:
+
+- Controller tests using `@WebMvcTest` and MockMvc
+- Integration tests using `@SpringBootTest` with H2
 
 ## Project Structure
-```
-src/main/java/com/omar/postify/
-├── controller/          # HTTP request handlers
-├── service/             # Business logic (posts, follows, likes)
-├── repository/          # Database access layer (JPA)
-├── entity/              # Domain models (User, Post, Follow, Like)
-└── config/              # Spring Security, file upload config
 
-src/main/resources/
-├── templates/           # Thymeleaf HTML views
-└── static/              # CSS, JS, default avatar image
-
+```text
+      service/
+      util/
+    resources/
+      templates/
+      db/migration/
+      static/
+      templates/
+      application.properties
+  test/
+    java/com/omar/postify/
+      controller/
+      integration/
+    resources/
+      application-test.properties
 uploads/
-├── avatars/             # User profile pictures
-└── posts/               # Post images
 ```
 
-## File Uploads
-- **Avatars**: Stored in `uploads/avatars/`, served at `/images/avatars/...`
-- **Post images**: Stored in `uploads/posts/`, served at `/images/posts/...`
-- Max file size: 5MB per image
+## Notes
 
-## Running Tests
-```bash
-# Unit and integration tests
-mvn test
+- Avatar uploads are served from `/images/avatars/**`.
+- Post creation and profile editing both support multipart uploads.
+- Admin activity is recorded in the `admin_logs` domain model.
+- A `JwtUtil` helper exists in the codebase, but it is not currently wired into the active security chain.
 
-# Run with coverage
-mvn test jacoco:report
-```
+## Contact
 
-## Deployment
-
-### Docker (Recommended)
-Create a `docker-compose.yml`:
-```yaml
-version: '3.8'
-
-services:
-  mysql:
-    image: mysql:8.0
-    environment:
-      MYSQL_DATABASE: postify
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-
-  app:
-    build: .
-    depends_on:
-      - mysql
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/postify
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
-
-volumes:
-  mysql_data:
-```
-
-Run:
-```bash
-docker-compose up --build
-```
-
-## Security Considerations
-- Passwords encrypted with BCrypt (10 rounds)
-- Session-based authentication with Thymeleaf form protection
-- File upload validation (whitelist image types)
-- CSRF tokens on all forms
-- SQL injection protected via Hibernate parameterized queries
-
-## Future Improvements
-- [ ] Infinite scroll for feed (cursor-based pagination)
-- [ ] Comments and nested replies
-- [ ] Direct messaging between users
-- [ ] Notifications system (real-time with WebSockets)
-- [ ] Rate limiting per endpoint
-- [ ] GitHub Actions CI/CD workflow
-- [ ] API versioning (REST API alongside MVC)
-- [ ] Email verification on registration
-
-## Known Limitations
-- File uploads stored locally (not cloud storage)
-- No real-time notifications yet
-- Single instance deployment (limited horizontal scaling)
-
-## License
-MIT License - see LICENSE file for details
-
-## Contributing
-Feel free to fork, submit issues, or create pull requests.
-
----
-
-**Project Status**: MVP (Minimum Viable Product) - Core social features working, ready for expansion
+`3mur1111@gmail.com`
