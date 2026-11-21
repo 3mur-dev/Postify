@@ -1,0 +1,43 @@
+# Build artifacts
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Environment and secrets
+.env
+.env.local
+.env.properties
+!.env.example
+
+# Uploads
+uploads/
+
+# Docker
+docker-compose.yml
+Dockerfile
+
+# Documentation
+HELP.md
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+*~

@@ -1,0 +1,20 @@
+CREATE TABLE post_topic_analysis (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    post_id BIGINT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    analyzed_content VARCHAR(1000),
+    analyzed_at DATETIME(6),
+    error_message VARCHAR(1000),
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    revision BIGINT NOT NULL DEFAULT 1,
+    attempts INT NOT NULL DEFAULT 0,
+    claim_token VARCHAR(36),
+    lease_expiry DATETIME(6),
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_post_topic_analysis_post (post_id),
+    INDEX idx_post_topic_analysis_updated_at (updated_at),
+    INDEX idx_post_topic_analysis_status (status),
+    INDEX idx_post_topic_analysis_lease_expiry (lease_expiry),
+    CONSTRAINT fk_post_topic_analysis_post FOREIGN KEY (post_id) REFERENCES post(id) ON DELETE CASCADE
+);
